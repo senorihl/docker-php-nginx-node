@@ -1,0 +1,33 @@
+language: javascript
+
+node_js:
+  - '15'
+  - '14'
+
+env:
+  - PHP_VERSION=8.0
+  - PHP_VERSION=7.4
+
+before_script:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - echo $GITHUB_TOKEN | docker login https://docker.pkg.github.com -u USERNAME --password-stdin
+
+script:
+  - ./travis-build.sh build
+  - ./travis-build.sh start
+  - sleep 10
+  - ./travis-build.sh test
+
+after_failure:
+  - docker logs travis_test_container
+
+after_success:
+  - ./travis-build.sh push
+
+jobs:
+  include:
+    - env:
+        - DOCKER_IMAGE_VERSION=latest
+        - PHP_VERSION=8.0
+      node_js: 'node'
+    - {}
